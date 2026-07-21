@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
+import { getMinBookingDate } from './utils/date'
 
 function App() {
   // State variables to keep track of user choices
@@ -11,7 +12,7 @@ function App() {
 
   // Example available time slots
   const timeSlots = ['09:00 AM', '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM'];
-
+  const minDate = getMinBookingDate();
   const handleBooking = (e) => {
     e.preventDefault();
     alert(`Booked for ${selectedDate} at ${selectedTime}`);
@@ -48,6 +49,7 @@ function App() {
               <input 
                 type="date" 
                 id="booking-date"
+                min = {minDate}
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 required 
