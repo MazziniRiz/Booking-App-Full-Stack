@@ -13,9 +13,37 @@ function App() {
   // Example available time slots
   const timeSlots = ['09:00 AM', '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM'];
   const minDate = getMinBookingDate();
-  const handleBooking = (e) => {
+  
+  const handleBooking = async (e) => {
     e.preventDefault();
-    alert(`Booked for ${selectedDate} at ${selectedTime}`);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: selectedDate,
+          time: selectedTime,
+          name: e.target[2].value,  // or use state variables for form inputs
+          email: e.target[3].value,
+          notes: e.target[4].value,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${data.error}`);
+        return;
+      }
+
+      alert(`Booking successful for ${data.booking.name} on ${data.booking.date} at ${data.booking.time}!`);
+    } catch (error) {
+      console.error('Failed to submit booking:', error);
+      alert('Failed to connect to the server.');
+    }
   };
 
   return (
