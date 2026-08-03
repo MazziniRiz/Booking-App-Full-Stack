@@ -1,27 +1,19 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-
 }
 
-// Defining database
 model Booking {
   id        Int      @id @default(autoincrement())
-  date      String   // e.g., "2026-07-25"
-  time      String   // e.g., "10:00 AM"
+  date      String
+  time      String
   name      String
   email     String
-  notes     String?  // Optional field
+  notes     String?
   createdAt DateTime @default(now())
 
-  // Prevents double-booking: date + time combination must be unique
-  @@unique([date, time]) 
+  @@unique([date, time])
 }

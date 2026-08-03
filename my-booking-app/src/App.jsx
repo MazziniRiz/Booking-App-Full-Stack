@@ -9,6 +9,9 @@ function App() {
   // State variables to keep track of user choices
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [notes, setNotes] = useState('');
 
   // Example available time slots
   const timeSlots = ['09:00 AM', '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM'];
@@ -17,6 +20,7 @@ function App() {
   const handleBooking = async (e) => {
     e.preventDefault();
 
+    console.log("Frontend state right before sending:", { name, email, notes });
     try {
       const response = await fetch('http://localhost:5000/api/bookings', {
         method: 'POST',
@@ -26,9 +30,9 @@ function App() {
         body: JSON.stringify({
           date: selectedDate,
           time: selectedTime,
-          name: e.target[2].value,  // or use state variables for form inputs
-          email: e.target[3].value,
-          notes: e.target[4].value,
+          name: name,  // or use state variables for form inputs
+          email: email,
+          notes: notes
         }),
       });
 
@@ -107,9 +111,23 @@ function App() {
             {selectedDate && selectedTime && (
               <div className="form-group contact-details">
                 <label>3. Your Details</label>
-                <input type="text" placeholder="Your Name" required />
-                <input type="email" placeholder="Your Email Address" required />
-                <textarea placeholder="Anything specific you'd like to discuss?" rows="3" />
+                <input 
+                  type="text"
+                  value = {name} 
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your Name" required 
+                />
+                <input 
+                  type="email"
+                  value = {email} 
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your Email Address" required 
+                />
+                <textarea 
+                  value = {notes} 
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Anything specific you'd like to discuss?" rows="3" 
+                />
                 
                 <button type="submit" className="confirm-btn">
                   Confirm Booking ({selectedTime})

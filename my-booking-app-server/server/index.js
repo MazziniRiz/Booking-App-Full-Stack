@@ -3,10 +3,22 @@ const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg')
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+const { Pool } = require('pg')
+
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 10,                     // Set a reasonable pool size
+  idleTimeoutMillis: 30000,    // Close idle clients after 30s
+  connectionTimeoutMillis: 5000,
+  family: 4,
+});
+const adapter = new PrismaPg(pool);
+const globalForPrisma = global;
+const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
 
 const app = express();
-const prisma = new PrismaClient(adapter);
 const PORT = process.env.PORT || 5000;
 
 // Middleware
@@ -18,7 +30,7 @@ app.use(express.json()); // Parses incoming JSON request bodies
 // API Endpoint 1: Fetch existing bookings
 app.get('/api/bookings', async (req, res) => {
   try {
-    const bookings = await prisma.booking.findMany({
+    const bookings = await prisma.Booking.findMany({
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, data: bookings });
@@ -30,6 +42,7 @@ app.get('/api/bookings', async (req, res) => {
 // API Endpoint 2: Create a new booking
 app.post('/api/bookings', async (req, res) => {
   const { date, time, name, email, notes } = req.body;
+  console.log('Received body from frontend', req.body);
 
   if (!date || !time || !name || !email) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -37,12 +50,15 @@ app.post('/api/bookings', async (req, res) => {
 
   try {
     // Check if slot is taken
-    const existingBooking = await prisma.booking.findFirst({
-      where: { date, time }
+  const existingBooking = await prisma.booking.findFirst({
+      where: {
+        date: String(date),
+        time: String(time),
+      },
     });
 
     if (existingBooking) {
-      return res.status(409).json({ error: 'This time slot is already booked!' });
+      return res.status(400).json({ error: "This time slot is already booked!" });
     }
 
     // Insert into PostgreSQL
@@ -58,8 +74,8 @@ app.post('/api/bookings', async (req, res) => {
 
     res.status(201).json({ success: true, booking: newBooking });
   } catch (error) {
-    console.error('Database Error:', error);
-    res.status(500).json({ error: 'Database transaction failed' });
+    console.error("FULL PRISMA ERROR:", error);
+    return res.status(500).json({ error: error.message || "Database transaction failed" });
   }
 });
 
